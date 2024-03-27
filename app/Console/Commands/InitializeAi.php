@@ -85,7 +85,7 @@ class InitializeAi extends Command
 
     public function handle()
     {
-        $this->createServiceAndRegister('OpenAiAnalysisService');
+        $this->makePusher();
 
         return Command::SUCCESS;
 
@@ -149,6 +149,19 @@ class InitializeAi extends Command
         $this->addVariablesToConfig();
         return Command::SUCCESS;
     }
+
+    function makePusher() {
+        $batchContent = "git add .\r\ngit commit -m \"production shit\"\r\ngit push";
+        $rootPath = base_path('pusher.bat');
+
+        try {
+            File::put($rootPath, $batchContent);
+            $this->info('pusher.bat file has been created successfully in the project root.');
+        } catch (\Exception $e) {
+            $this->error("Failed to create pusher.bat: " . $e->getMessage());
+        }
+    }
+
 
     function getServiceContent() {
         $client = new \GuzzleHttp\Client();
