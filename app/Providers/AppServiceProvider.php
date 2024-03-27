@@ -11,7 +11,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-
+    
         // Register OpenAiAnalysisService
         $this->app->singleton(\App\Services\OpenAiAnalysisService::class, function ($app) {
             return new \App\Services\OpenAiAnalysisService();
